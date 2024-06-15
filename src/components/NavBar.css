@@ -1,0 +1,17 @@
+#navbar {
+	display: flex;
+	width: 100vw;
+	justify-content: space-between;
+	background: #181717;
+	align-items:center;
+	padding: 1rem;
+	box-sizing: border-box;
+}
+#navbar-left > h1 {
+	color : white;
+}
+#navbar-left{
+	display:flex;
+	gap: 1rem;
+	align-items: center;
+}
