@@ -3,7 +3,6 @@ import {getAuth} from 'firebase/auth';
 import {getFirestore} from 'firebase/firestore';
 
 const firebaseConfig = process.env.REACT_APP_FIREBASE_CONFIG
-
   
 
 
