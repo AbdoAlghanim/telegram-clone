@@ -20,7 +20,9 @@ function App() {
   return (
 	  <div>
     <NavBar/>
-    <Login onLoginSuccess={handleLoginSuccess}/>
+    {/* TODO: Implement conditional rendering of the Chat component and the Login page */}
+     {/* !user ? <Login onLoginSuccess={handleLoginSuccess}/> : <Chat></Chat> */}
+     <Login onLoginSuccess={handleLoginSuccess}/>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { signInWithPopup, GoogleAuthProvider, getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 const Login = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
@@ -8,9 +9,10 @@ const Login = ({ onLoginSuccess }) => {
   const [isSignUp, setIsSignUp] = useState(false);
 
   const auth = getAuth();
-
+  const db = getFirestore()
+  // update the auth instance when the user logs in/out (used for conditional rendering in App.js)
   useEffect(() => {
-    const unregisterAuthObserver = onAuthStateChanged(getAuth(), (user) => {
+    const unregisterAuthObserver = onAuthStateChanged(auth, (user) => {
       if (user) {
         onLoginSuccess();
       }
@@ -18,14 +20,30 @@ const Login = ({ onLoginSuccess }) => {
     return () => unregisterAuthObserver();
   }, [onLoginSuccess]);
 
+  // function to be called in email sign in/up 
+  const addUserToDb = async (result) => {
+    const user = result.user;
+    const userRef = doc(db, 'users', user.uid);
+    await setDoc(userRef, {
+      uid: user.uid,
+      displayName: user.displayName || 'Anonymous',
+      email: user.email,
+      photoURL: user.photoURL || '',
+      createdAt: new Date()
+    }, { merge: true }); // merge: true ensures no overwrites occur
+  };
+  
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
+      let result;
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
+        result = await createUserWithEmailAndPassword(auth, email, password);
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        result = await signInWithEmailAndPassword(auth, email, password);
       }
+      
+      await addUserToDb(result);
       onLoginSuccess();
     } catch (error) {
       setError(error.message);
@@ -34,7 +52,18 @@ const Login = ({ onLoginSuccess }) => {
   
   const handleSignIn = async (provider) => {
     try {
-      await signInWithPopup(getAuth(), provider);
+      const result = await signInWithPopup(getAuth(), provider);
+      const user = result.user;
+
+      const userRef = doc(db, 'users', user.uid);
+      await setDoc(userRef, {
+        uid: user.uid,
+        displayName: user.displayName,
+        email: user.email,
+        photoURL: user.photoURL,
+        createdAt: new Date()
+      }, { merge: true }); // merge: true to avoid overwriting existing fields
+
       onLoginSuccess();
     } catch (error) {
       console.error('Error signing in:', error);
@@ -68,6 +97,9 @@ const Login = ({ onLoginSuccess }) => {
         </div>
         <button type="submit">{isSignUp ? 'Sign Up' : 'Login'}</button>
       </form>
+      <p>
+        {!isSignUp ? 'Don\'t Have an account?' : 'Already Have an account?'}
+      </p>
       <button onClick={() => setIsSignUp(!isSignUp)}>
         {isSignUp ? 'Switch to Login' : 'Switch to Sign Up'}
       </button>
