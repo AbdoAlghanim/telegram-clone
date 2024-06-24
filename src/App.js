@@ -3,6 +3,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import Login from './components/Login';
 import NavBar from './components/NavBar'
 import ChatList from './components/ChatList';
+import ChatWindow from './components/ChatWindows';
 import { auth } from './firebase';
 
 const App = () => {
@@ -32,19 +33,17 @@ const App = () => {
   }, []); // Empty dependency array ensures this runs only once on mount
 
   return (
-	  <div>
-    <NavBar/>
-
-      { /* TODO: Implement conditional rendering of the Chat component and the Login page */}
-      { /* !user ? <Login onLoginSuccess={handleLoginSuccess}/> : <Chat></Chat> */}
-    {!user ? (
-        <Login onLoginSuccess={handleLoginSuccess}/>
-        ) : (
-          <ChatList selectChat={selectChat}/>
-        )}
-     
+    <div>
+      {!isLoggedIn ? (
+        <Login onLoginSuccess={handleLoginSuccess} />
+      ) : (
+        <div id='chat-container'>
+          <ChatList selectChat={selectChat} />
+          {selectedChat && <ChatWindow selectedChat={selectedChat} />}
+        </div>
+      )}
     </div>
   );
-}
+};
 
 export default App;

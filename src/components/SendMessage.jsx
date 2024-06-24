@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from './firebase';
+import { auth, db } from '../firebase.js';
 
 const SendMessage = ({ selectedChat }) => {
   const [message, setMessage] = useState('');
