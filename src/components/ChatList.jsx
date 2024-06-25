@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { collection, query, where, onSnapshot, getDocs, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import Logout from './LogOut';
+import UserNameFromUid from './UserNameFromUid';
 
 const ChatList = ({ selectChat }) => {
   const [chats, setChats] = useState([]);
@@ -34,32 +35,7 @@ const ChatList = ({ selectChat }) => {
       console.error('Error creating chat: ', error);
     }
   };
-  // TODO: implement a mechanism to get the user's name from user id
-  // the commented mechanism returns a promise which react can't handle as a child
-/*
-  const getUserNameById = async (userId) => {
-    try {
-      const userRef = doc(db, 'users', userId);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        const name = await userSnap.data().displayName || 'Unknown User';
-        return name;
-      } else {
-        console.log('No such user!');
-        return 'Unknown User';
-      }
-    } catch (error) {
-      console.error('Error getting user name: ', error);
-      return 'Unknown User';
-    }
-  };
-  
-  const fetchUserNameById = async (getUserNameById) => {
-    const displayName = await getUserNameById;
-    return displayName
-  }
-  chats.map(chat => console.log(fetchUserNameById(getUserNameById(chat.participants.filter((x) => x != user.uid)[0]))))
-   */
+
   return (
     <div>
       <h2>Chats</h2>
@@ -83,7 +59,10 @@ const ChatList = ({ selectChat }) => {
         <ul>
           {chats.map(chat => (
             <li key={chat.id} onClick={() => selectChat(chat.id)}>
-              {chat.name || `Chat with ${chat.participants.filter(id => id !== user.uid)[0]}`}
+              Chat with{' '}
+              {chat.participants.map(participant => (
+                participant !== user.uid && <UserNameFromUid key={participant} userId={participant} />
+              ))}
             </li>
           ))}
         </ul>
