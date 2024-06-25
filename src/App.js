@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth, db } from './firebase';
+import { doc, getDoc } from 'firebase/firestore'
 import Login from './components/Login';
 import NavBar from './components/NavBar'
 import ChatList from './components/ChatList';
 import ChatWindow from './components/ChatWindows';
-import { auth } from './firebase';
+import SetProfile from './components/SetProfile';
+
 
 const App = () => {
+  const [user, setUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [selectedChat, setSelectedChat] = useState(null);
+  const [profileComplete, setProfileComplete] = useState(false);
 
   const handleLoginSuccess = () => {
     setIsLoggedIn(true);
@@ -19,11 +24,20 @@ const App = () => {
   };
 
   useEffect(() => {
-    // Setting up the listener for auth state changes
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    // Setting up the listener for auth state changes and checks if the user's profile is complete
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
+        setUser(user);
         setIsLoggedIn(true);
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists() && userSnap.data().displayName !== "Anonymous" && userSnap.data().handle) {
+          setProfileComplete(true);
+        } else {
+          setProfileComplete(false);
+        }
       } else {
+        setUser(null);
         setIsLoggedIn(false);
       }
     });
@@ -36,12 +50,16 @@ const App = () => {
     <div>
       {!isLoggedIn ? (
         <Login onLoginSuccess={handleLoginSuccess} />
-      ) : (
+      ) : profileComplete ?
+      (
         <div id='chat-container'>
           <ChatList selectChat={selectChat} />
           {selectedChat && <ChatWindow selectedChat={selectedChat} />}
         </div>
-      )}
+      ) : (
+        <SetProfile onProfileSet={() => setProfileComplete(true)} />
+      )
+    }
     </div>
   );
 };
